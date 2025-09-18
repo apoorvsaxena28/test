@@ -1,4 +1,4 @@
-// Data transfer object for Service information
+ko// Data transfer object for Service information
 public record WindowsService(String serviceName, String displayName, Long pid) {}
 
 // Service Class
@@ -32,6 +32,67 @@ public class WindowsServiceDiscoveryService {
                 
                 // Use Jackson to parse the JSON array
                 ObjectMapper objectMapper = new ObjectMapper();
+                services = objectMapper.readValue(output, objectMapper.getTypeFactory().constructCollectionType(List.class, WindowsService.class));
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.err.println("PowerShell command exited with non-zero status code: " + exitCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return services;
+    }
+}
+
+
+remote file logic
+
+// WindowsServiceDiscoveryService.java
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Service;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class WindowsServiceDiscoveryService {
+
+    /**
+     * Executes a PowerShell command on a remote server to get detailed service information.
+     * @param hostname The remote server's hostname or IP address.
+     * @param username The username for authentication.
+     * @param password The password for authentication.
+     * @return A List of WindowsService objects.
+     */
+    public List<WindowsService> findRemoteServiceDetails(String hostname, String username, String password) {
+        List<WindowsService> services = new ArrayList<>();
+        // PowerShell command to invoke a script block on the remote computer
+        String command = String.format(
+            "powershell.exe -Command \"Invoke-Command -ComputerName %s -ScriptBlock { Get-CimInstance -ClassName Win32_Service | Select-Object Name, DisplayName, ProcessId } | ConvertTo-Json\"",
+            hostname
+        );
+
+        try {
+            // NOTE: For remote execution, you need to set up PowerShell Remoting (WinRM)
+            // and often need to run as an admin account.
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command);
+            
+            // This is a simplified approach. In a real-world scenario, you would
+            // pass credentials to the PowerShell session more securely.
+            // For now, we are assuming the process is running with an account that has
+            // access to the remote machine or that WinRM is configured for Kerberos.
+            Process process = processBuilder.start();
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String output = reader.lines().reduce("", (acc, line) -> acc + System.lineSeparator() + line);
+                
+                ObjectMapper objectMapper = new ObjectMapper();
+                // A better approach would be to parse the output and handle authentication errors
+                // For simplicity, we are assuming a successful command execution.
                 services = objectMapper.readValue(output, objectMapper.getTypeFactory().constructCollectionType(List.class, WindowsService.class));
             }
 
