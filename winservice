@@ -1,49 +1,47 @@
+// Data transfer object for Service information
+public record WindowsService(String serviceName, String displayName, Long pid) {}
+
 // Service Class
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class WindowsServiceDiscoveryService {
 
-    // Regex to capture the service name from the 'sc query' command output
-    private static final Pattern SERVICE_NAME_PATTERN = Pattern.compile("^SERVICE_NAME: (.+)$", Pattern.MULTILINE);
-
     /**
-     * Executes the 'sc query' command and parses the output to find all service names.
-     * @return A Set of unique service names.
+     * Executes a PowerShell command to get detailed service information.
+     * @return A List of WindowsService objects.
      */
-    public Set<String> findAllServiceIds() {
-        Set<String> serviceNames = new HashSet<>();
+    public List<WindowsService> findAllServiceDetails() {
+        List<WindowsService> services = new ArrayList<>();
+        // PowerShell command to get service details, format as JSON
+        String command = "powershell.exe -Command \"Get-CimInstance -ClassName Win32_Service | Select-Object Name, DisplayName, ProcessId | ConvertTo-Json\"";
+        
         try {
-            // Use ProcessBuilder for better control over the process environment
-            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", "sc query state= all");
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command);
             Process process = processBuilder.start();
 
-            // Read the output of the command
+            // Read the JSON output from PowerShell
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String output = reader.lines().reduce("", (acc, line) -> acc + System.lineSeparator() + line);
-                Matcher matcher = SERVICE_NAME_PATTERN.matcher(output);
-
-                while (matcher.find()) {
-                    serviceNames.add(matcher.group(1).trim());
-                }
+                
+                // Use Jackson to parse the JSON array
+                ObjectMapper objectMapper = new ObjectMapper();
+                services = objectMapper.readValue(output, objectMapper.getTypeFactory().constructCollectionType(List.class, WindowsService.class));
             }
 
-            // Wait for the process to complete and check the exit code
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                // Log and handle the error appropriately
-                System.err.println("Command exited with non-zero status code: " + exitCode);
+                System.err.println("PowerShell command exited with non-zero status code: " + exitCode);
             }
         } catch (Exception e) {
-            // Log the exception for debugging
             e.printStackTrace();
         }
-        return serviceNames;
+        return services;
     }
 }
