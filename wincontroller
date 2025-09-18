@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.Set;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/services")
@@ -17,9 +17,9 @@ public class WindowsServiceController {
         this.service = service;
     }
 
-    @GetMapping("/ids")
-    public ResponseEntity<Set<String>> getServiceIds() {
-        Set<String> serviceIds = service.findAllServiceIds();
-        return ResponseEntity.ok(serviceIds);
+    @GetMapping("/details")
+    public ResponseEntity<List<WindowsService>> getServiceDetails() {
+        List<WindowsService> serviceDetails = service.findAllServiceDetails();
+        return ResponseEntity.ok(serviceDetails);
     }
 }
