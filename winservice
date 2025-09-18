@@ -1,38 +1,49 @@
+// Service Class
+import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class WindowsServiceFinder {
+@Service
+public class WindowsServiceDiscoveryService {
 
-    public static List<String> getServiceNames() {
-        List<String> services = new ArrayList<>();
-        ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", "sc query state= all");
+    // Regex to capture the service name from the 'sc query' command output
+    private static final Pattern SERVICE_NAME_PATTERN = Pattern.compile("^SERVICE_NAME: (.+)$", Pattern.MULTILINE);
 
+    /**
+     * Executes the 'sc query' command and parses the output to find all service names.
+     * @return A Set of unique service names.
+     */
+    public Set<String> findAllServiceIds() {
+        Set<String> serviceNames = new HashSet<>();
         try {
+            // Use ProcessBuilder for better control over the process environment
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", "sc query state= all");
             Process process = processBuilder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().startsWith("SERVICE_NAME:")) {
-                    String serviceName = line.trim().substring("SERVICE_NAME:".length()).trim();
-                    services.add(serviceName);
+            // Read the output of the command
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String output = reader.lines().reduce("", (acc, line) -> acc + System.lineSeparator() + line);
+                Matcher matcher = SERVICE_NAME_PATTERN.matcher(output);
+
+                while (matcher.find()) {
+                    serviceNames.add(matcher.group(1).trim());
                 }
             }
+
+            // Wait for the process to complete and check the exit code
             int exitCode = process.waitFor();
             if (exitCode != 0) {
+                // Log and handle the error appropriately
                 System.err.println("Command exited with non-zero status code: " + exitCode);
             }
         } catch (Exception e) {
+            // Log the exception for debugging
             e.printStackTrace();
         }
-        return services;
-    }
-
-    public static void main(String[] args) {
-        List<String> serviceNames = getServiceNames();
-        System.out.println("Found " + serviceNames.size() + " services:");
-        serviceNames.forEach(System.out::println);
+        return serviceNames;
     }
 }
