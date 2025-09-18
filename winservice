@@ -1,0 +1,38 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
+public class WindowsServiceFinder {
+
+    public static List<String> getServiceNames() {
+        List<String> services = new ArrayList<>();
+        ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", "sc query state= all");
+
+        try {
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().startsWith("SERVICE_NAME:")) {
+                    String serviceName = line.trim().substring("SERVICE_NAME:".length()).trim();
+                    services.add(serviceName);
+                }
+            }
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.err.println("Command exited with non-zero status code: " + exitCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return services;
+    }
+
+    public static void main(String[] args) {
+        List<String> serviceNames = getServiceNames();
+        System.out.println("Found " + serviceNames.size() + " services:");
+        serviceNames.forEach(System.out::println);
+    }
+}
