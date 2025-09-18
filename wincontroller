@@ -23,3 +23,6 @@ public class WindowsServiceController {
         return ResponseEntity.ok(serviceDetails);
     }
 }
+
+
+remote servers logic
