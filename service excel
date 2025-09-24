@@ -1,0 +1,66 @@
+import org.apache.poi.ss.usermodel.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class ExcelUploadService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public void processAndSaveData(MultipartFile file) {
+        try (InputStream inputStream = file.getInputStream()) {
+            Workbook workbook = WorkbookFactory.create(inputStream);
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Get header row
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                throw new IllegalArgumentException("Excel file is empty or has no header row.");
+            }
+            
+            // Create a list to store header names
+            List<String> headers = new ArrayList<>();
+            for (Cell cell : headerRow) {
+                headers.add(cell.getStringCellValue().trim());
+            }
+
+            // Iterate over data rows
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row currentRow = sheet.getRow(i);
+                if (currentRow == null) continue;
+
+                // Use HashMap to store data for the current row dynamically
+                Map<String, String> rowDataMap = new HashMap<>();
+                for (int j = 0; j < headers.size(); j++) {
+                    Cell currentCell = currentRow.getCell(j, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+                    if (currentCell != null) {
+                        // Use a formatter to handle different cell types (numeric, string, etc.)
+                        DataFormatter formatter = new DataFormatter();
+                        rowDataMap.put(headers.get(j), formatter.formatCellValue(currentCell));
+                    }
+                }
+
+                // Map data from HashMap to the User entity and save
+                // getOrDefault() provides a default value if a key is not found in the map
+                User user = new User();
+                user.setName(rowDataMap.getOrDefault("Name", "Default Name"));
+                user.setEmail(rowDataMap.getOrDefault("Email", "default@example.com"));
+                user.setDepartment(rowDataMap.getOrDefault("Department", "General"));
+
+                userRepository.save(user);
+            }
+            workbook.close();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse and save Excel data: " + e.getMessage());
+        }
+    }
+}
