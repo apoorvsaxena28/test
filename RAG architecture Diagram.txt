@@ -1,0 +1,86 @@
+                ┌───────────────────────────────────────────────────┐
+                │                 Banking Users                     │
+                │───────────────────────────────────────────────────│
+                │ Retail Customer   |   Employee   |   Auditor      │
+                │ Relationship Mgr  | Compliance   |   Executives   │
+                └───────────────────────────────────────────────────┘
+                                      │
+                             (1) Query / Request
+                                      │
+                                      ▼
+
+                    ┌────────────────────────────────────────┐
+                    │     Persona Identification Layer       │
+                    │────────────────────────────────────────│
+                    │ • Query intent analysis                │
+                    │ • User RBAC / department mapping       │
+                    │ • Behavioral & historical signals      │
+                    │ • Output: Persona Vector P             │
+                    └────────────────────────────────────────┘
+                                      │
+                     Persona Vector P │
+                                      ▼
+
+       ┌─────────────────────────────────────────────────────────────────────┐
+       │      Persona-Based Retrieval Controller (Core Decision Engine)      │
+       │─────────────────────────────────────────────────────────────────────│
+       │ 1. Determine required context depth from persona                    │
+       │    - Exec → symbolic+distilled  |  Analyst → distilled+raw         │
+       │    - Auditor → all layers       |  Customer → symbolic only        │
+       │                                                                       │
+       │ 2. Generate Permission Mask M                                        │
+       │    - Based on banking RBAC, PII policy, regulatory controls          │
+       │    - Determines allowed fields, nodes, spans, tables                 │
+       └─────────────────────────────────────────────────────────────────────┘
+                                      │
+                        Persona → CCP Layer Selection
+                                      │
+                                      ▼
+
+                ┌───────────────────────────────────────────────────┐
+                │      Context Compression Pyramid (CCP Store)      │
+                │───────────────────────────────────────────────────│
+                │  R₀: Raw Layer                                    │
+                │     - Loan docs, logs, KYC packets, statements    │
+                │                                                   │
+                │  R₁: Distilled Layer                              │
+                │     - Summaries, extracted tables, risk notes     │
+                │                                                   │
+                │  R₂: Symbolic Layer                               │
+                │     - Rules, knowledge graph nodes, red flags     │
+                └───────────────────────────────────────────────────┘
+                                      │
+                   Raw/Distilled/Symbolic Subsets Selected
+                                      ▼
+
+       ┌─────────────────────────────────────────────────────────────────────┐
+       │        Pre-LLM Permission Enforcement & Safety Filter              │
+       │─────────────────────────────────────────────────────────────────────│
+       │ • Apply mask M to remove disallowed:                                │
+       │     - PII fields (account#, PAN, SSN, addresses)                     │
+       │     - SAR content, AML/Risk thresholds                               │
+       │     - Internal-only models & parameters                              │
+       │ • Ensures AI NEVER sees restricted content                           │
+       └─────────────────────────────────────────────────────────────────────┘
+                                      │
+                         Safe, Persona-Validated Context
+                                      ▼
+
+                ┌───────────────────────────────────────────────────┐
+                │                 LLM / GenAI Model                 │
+                │───────────────────────────────────────────────────│
+                │ • Banking-tuned LLM                               │
+                │ • Generates answer using ONLY filtered context    │
+                └───────────────────────────────────────────────────┘
+                                      │
+                             Answer / Decision
+                                      │
+                                      ▼
+
+            ┌────────────────────────────────────────────────────────────┐
+            │            Secure Output & Audit Logging Layer              │
+            │────────────────────────────────────────────────────────────│
+            │ • Logs persona used, layers accessed, permissions applied  │
+            │ • Captures rationale & context for audit/regulators        │
+            │ • Produces final answer for user                           │
+            └────────────────────────────────────────────────────────────┘
