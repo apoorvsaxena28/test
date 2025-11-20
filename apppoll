@@ -1,0 +1,81 @@
+import java.io.*;
+import java.util.*;
+
+public class IISAppPoolFetcher {
+
+    public List<Map<String, String>> getIISAppPoolComponents(
+            String accId,
+            String serverName,
+            String decryptedUserPassword,
+            String uid
+    ) {
+
+        List<Map<String, String>> resultList = new ArrayList<>();
+
+        try {
+            String serviceAccount = "corp\\" + accId;
+
+            // ----- Build the PowerShell script -----
+            String psScript =
+                    "$server = '" + serverName + "';\n" +
+                    "$username = '" + uid + "';\n" +
+                    "$password = '" + decryptedUserPassword + "';\n" +
+                    "$securePassword = ConvertTo-SecureString $password -AsPlainText -Force;\n" +
+                    "$credential = New-Object System.Management.Automation.PSCredential($username, $securePassword);\n" +
+                    "Invoke-Command -ComputerName $server -Credential $credential -ScriptBlock {\n" +
+                    "    Import-Module WebAdministration;\n" +
+                    "    $appPools = Get-ItemProperty IIS:\\AppPools\\*;\n" +
+                    "    $appPools | Where-Object { $_.ProcessModel.UserName -eq '" + serviceAccount + "' } |\n" +
+                    "    Select-Object -ExpandProperty Name;\n" +
+                    "};";
+
+            // ----- Execute PowerShell -----
+            ProcessBuilder pb = new ProcessBuilder(
+                    "powershell",
+                    "-Command",
+                    psScript
+            );
+
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            // ----- Read output -----
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            List<String> appPools = new ArrayList<>();
+
+            while ((line = reader.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    appPools.add(line.trim());
+                }
+            }
+
+            int exitCode = process.waitFor();
+
+            // ----- Handle output similar to Python -----
+            if (exitCode != 0 || appPools.isEmpty()) {
+                Map<String, String> row = new HashMap<>();
+                row.put("Component_Name", "0");
+                row.put("Error_Msg", "No Error or No Pools Found");
+                resultList.add(row);
+                return resultList;
+            }
+
+            for (String pool : appPools) {
+                Map<String, String> row = new HashMap<>();
+                row.put("Component_Name", pool);
+                row.put("Error_Msg", "No Errors");
+                resultList.add(row);
+            }
+
+            return resultList;
+
+        } catch (Exception e) {
+            Map<String, String> row = new HashMap<>();
+            row.put("Component_Name", "0");
+            row.put("Error_Msg", e.getMessage());
+            resultList.add(row);
+            return resultList;
+        }
+    }
+}
