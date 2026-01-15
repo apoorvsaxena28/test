@@ -1,7 +1,9 @@
 package com.boa.gendart.dao;
 
 import com.boa.gendart.common.DataSourceLocator;
-import com.boa.gendart.procedure.IFFetchBlobStoredProcedure;
+import com.boa.gendart.constants.GenDARTConstants;
+import com.boa.gendart.exception.GenDARTException;
+import com.boa.gendart.procedure.ICDPFetchBlobStoredProcedure;
 import com.boa.gendart.util.StaticDataLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,21 +20,21 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public class IFFBlobFetchDAO extends JdbcDaoSupport {
+public class ICDPBlobFetchDAO extends JdbcDaoSupport {
 
-    private IFFetchBlobStoredProcedure ifFetchBlobStoredProcedure;
+    private ICDPFetchBlobStoredProcedure icdpFetchBlobStoredProcedure;
 
     @Autowired
-    public void setIFFDS(@Qualifier("iffPrimaryDS") DataSource datasource) {
+    public void setICDPDS(@Qualifier("icdpPrimaryDS") DataSource datasource) {
         setDataSource(datasource);
     }
 
     @Override
     protected void initDao() {
-        this.ifFetchBlobStoredProcedure = new IFFetchBlobStoredProcedure(getJdbcTemplate());
+        this.icdpFetchBlobStoredProcedure = new ICDPFetchBlobStoredProcedure(getJdbcTemplate());
     }
 
-    public Map findIFFBlobs(List<Map> txnKeys) throws Exception {
+    public Map findICDPBlobs(List<Map> txnKeys) throws Exception {
 
         Map sectionResultsMap = null;
 
@@ -40,30 +42,41 @@ public class IFFBlobFetchDAO extends JdbcDaoSupport {
 
             Map inputsMap = new HashMap();
 
-            DataSource ds = DataSourceLocator.getPrimaryDatasource("iff");
-            try (Connection con = ds.getConnection()) {
+            try (Connection con = getDataSource().getConnection()) {
 
                 Struct[] structs = new Struct[txnKeys.size()];
                 int i = 0;
 
                 for (Map m : txnKeys) {
                     structs[i++] = con.createStruct(
-                            "FDS_UDP_PROCEDURES.RUN_ID_TYPE",
+                            "ICDP_T_RLEENGPODB.MULTIBLOB",
                             new Object[]{
-                                    Long.parseLong(String.valueOf(m.get("PC_RULE_IN_OUT_LOG_ID")))
+                                    m.get("APP_REF_NO"),
+                                    m.get("RLE_ENG_CALL_SHORT_DESC_TX"),
+                                    Integer.parseInt(String.valueOf(m.get("RLE_ENG_CALL_SEQ_NO"))),
+                                    m.get("traceID")
                             }
                     );
                 }
 
-                Array runIdArray = con.createArrayOf(
-                        "FDS_UDP_PROCEDURES.RUN_ID_TABLE",
+                Array inputArray = con.createArrayOf(
+                        "ICDP_T_RLEENGPODB.MULTIBLOB_TABLE",
                         structs
                 );
 
-                inputsMap.put("P_RUN_IDS", runIdArray);
-                inputsMap.put("P_MAXROW", 50);
+                inputsMap.put("p_rleengpodbmultiblob", inputArray);
 
-                sectionResultsMap = this.ifFetchBlobStoredProcedure.execute(inputsMap);
+                sectionResultsMap = this.icdpFetchBlobStoredProcedure.execute(inputsMap);
+
+                String resultStatus = (String) sectionResultsMap.get(GenDARTConstants.PO_RESULTS);
+                if (!GenDARTConstants.OUT_ERR_MSG_VAL.equalsIgnoreCase(resultStatus)) {
+                    throw new GenDARTException(
+                            String.valueOf(sectionResultsMap.get(GenDARTConstants.PO_ERR_CODE_OUT))
+                    );
+                }
+            }
+            catch (DataAccessException e) {
+                throw e;
             }
         }
 
