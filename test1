@@ -1,32 +1,21 @@
-spring.main.web-application-type=servlet
+@Configuration
+public class JndiDataSourceConfig {
 
-# Main / default
-spring.datasource.default.jndi-name=java:/comp/env/jdbc
+    private DataSource jndi(String name) {
+        JndiDataSourceLookup jndi = new JndiDataSourceLookup();
+        jndi.setResourceRef(true);
+        return jndi.getDataSource(name);
+    }
 
-# GENDART
-spring.datasource.gendartActive.jndi-name=java:/comp/env/jdbc/gendartActive
-spring.datasource.userAdmin.jndi-name=java:/comp/env/jdbc/userAdmin
-
-# LDE
-spring.datasource.gendartLde.jndi-name=java:/comp/env/jdbc/gendartLDE
-
-# DFS
-spring.datasource.gendartDfs.jndi-name=java:/comp/env/jdbc/gendartDFS
-
-# PCDE
-spring.datasource.gendartPcde.jndi-name=java:/comp/env/jdbc/gendartPCDE
-
-# ICDP
-spring.datasource.gendartIcdp.jndi-name=java:/comp/env/jdbc/gendartICDP
-
-# CRDE
-spring.datasource.gendartCrde.jndi-name=java:/comp/env/jdbc/gendartCRDE
-
-# IFF
-spring.datasource.gendartIff.jndi-name=java:/comp/env/jdbc/gendartIFF
-
-# FRDE
-spring.datasource.gendartFrde.jndi-name=java:/comp/env/jdbc/gendartFRDE
-
-# FWDE
-spring.datasource.gendartFwde.jndi-name=java:/comp/env/jdbc/gendartFWDE
+    @Bean(name="defaultDS") public DataSource defaultDS() { return jndi("jdbc"); }
+    @Bean(name="gendartActiveDS") public DataSource gendartActiveDS() { return jndi("jdbc/gendartActive"); }
+    @Bean(name="userAdminDS") public DataSource userAdminDS() { return jndi("jdbc/userAdmin"); }
+    @Bean(name="gendartLdeDS") public DataSource gendartLdeDS() { return jndi("jdbc/gendartLDE"); }
+    @Bean(name="gendartDfsDS") public DataSource gendartDfsDS() { return jndi("jdbc/gendartDFS"); }
+    @Bean(name="gendartPcdeDS") public DataSource gendartPcdeDS() { return jndi("jdbc/gendartPCDE"); }
+    @Bean(name="gendartIcdpDS") public DataSource gendartIcdpDS() { return jndi("jdbc/gendartICDP"); }
+    @Bean(name="gendartCrdeDS") public DataSource gendartCrdeDS() { return jndi("jdbc/gendartCRDE"); }
+    @Bean(name="gendartIffDS") public DataSource gendartIffDS() { return jndi("jdbc/gendartIFF"); }
+    @Bean(name="gendartFrdeDS") public DataSource gendartFrdeDS() { return jndi("jdbc/gendartFRDE"); }
+    @Bean(name="gendartFwdeDS") public DataSource gendartFwdeDS() { return jndi("jdbc/gendartFWDE"); }
+}
