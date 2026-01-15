@@ -1,21 +1,76 @@
-@Configuration
-public class JndiDataSourceConfig {
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    private DataSource jndi(String name) {
-        JndiDataSourceLookup jndi = new JndiDataSourceLookup();
-        jndi.setResourceRef(true);
-        return jndi.getDataSource(name);
-    }
+    <modelVersion>4.0.0</modelVersion>
 
-    @Bean(name="defaultDS") public DataSource defaultDS() { return jndi("jdbc"); }
-    @Bean(name="gendartActiveDS") public DataSource gendartActiveDS() { return jndi("jdbc/gendartActive"); }
-    @Bean(name="userAdminDS") public DataSource userAdminDS() { return jndi("jdbc/userAdmin"); }
-    @Bean(name="gendartLdeDS") public DataSource gendartLdeDS() { return jndi("jdbc/gendartLDE"); }
-    @Bean(name="gendartDfsDS") public DataSource gendartDfsDS() { return jndi("jdbc/gendartDFS"); }
-    @Bean(name="gendartPcdeDS") public DataSource gendartPcdeDS() { return jndi("jdbc/gendartPCDE"); }
-    @Bean(name="gendartIcdpDS") public DataSource gendartIcdpDS() { return jndi("jdbc/gendartICDP"); }
-    @Bean(name="gendartCrdeDS") public DataSource gendartCrdeDS() { return jndi("jdbc/gendartCRDE"); }
-    @Bean(name="gendartIffDS") public DataSource gendartIffDS() { return jndi("jdbc/gendartIFF"); }
-    @Bean(name="gendartFrdeDS") public DataSource gendartFrdeDS() { return jndi("jdbc/gendartFRDE"); }
-    @Bean(name="gendartFwdeDS") public DataSource gendartFwdeDS() { return jndi("jdbc/gendartFWDE"); }
-}
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.bank.gen2</groupId>
+    <artifactId>gendart2-ui</artifactId>
+    <version>1.0.0</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <mybatis.version>2.3.1</mybatis.version>
+    </properties>
+
+    <dependencies>
+
+        <!-- Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- External Tomcat -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- MyBatis -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>${mybatis.version}</version>
+        </dependency>
+
+        <!-- DB2 -->
+        <dependency>
+            <groupId>com.ibm.db2</groupId>
+            <artifactId>jcc</artifactId>
+            <version>11.5.9.0</version>
+        </dependency>
+
+        <!-- JSON -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
