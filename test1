@@ -1,6 +1,5 @@
 package com.boa.gendart.dao;
 
-import com.boa.gendart.common.DataSourceLocator;
 import com.boa.gendart.constants.GenDARTConstants;
 import com.boa.gendart.exception.GenDARTException;
 import com.boa.gendart.procedure.ICDPFetchBlobStoredProcedure;
@@ -20,12 +19,12 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public class ICDPBlobFetchDAO extends JdbcDaoSupport {
+public class CFTBlobFetchDAO extends JdbcDaoSupport {
 
     private ICDPFetchBlobStoredProcedure icdpFetchBlobStoredProcedure;
 
     @Autowired
-    public void setICDPDS(@Qualifier("icdpPrimaryDS") DataSource datasource) {
+    public void setCFTDS(@Qualifier("cftPrimaryDS") DataSource datasource) {
         setDataSource(datasource);
     }
 
@@ -34,7 +33,7 @@ public class ICDPBlobFetchDAO extends JdbcDaoSupport {
         this.icdpFetchBlobStoredProcedure = new ICDPFetchBlobStoredProcedure(getJdbcTemplate());
     }
 
-    public Map findICDPBlobs(List<Map> txnKeys) throws Exception {
+    public Map findCFTBlobs(List<Map> txnKeys) throws Exception {
 
         Map sectionResultsMap = null;
 
@@ -65,6 +64,7 @@ public class ICDPBlobFetchDAO extends JdbcDaoSupport {
                 );
 
                 inputsMap.put("p_rleengpodbmultiblob", inputArray);
+                inputsMap.put(GenDARTConstants.PI_BUS_OBJ_NAME, "CFTBlobFetchDAO");
 
                 sectionResultsMap = this.icdpFetchBlobStoredProcedure.execute(inputsMap);
 
