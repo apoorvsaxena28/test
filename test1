@@ -1,22 +1,32 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="
-            http://xmlns.jcp.org/xml/ns/javaee
-            http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-         version="3.1">
+spring.main.web-application-type=servlet
 
-    <display-name>GenDART</display-name>
+# Main / default
+spring.datasource.default.jndi-name=java:/comp/env/jdbc
 
-    <servlet>
-        <servlet-name>dispatcher</servlet-name>
-        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
+# GENDART
+spring.datasource.gendartActive.jndi-name=java:/comp/env/jdbc/gendartActive
+spring.datasource.userAdmin.jndi-name=java:/comp/env/jdbc/userAdmin
 
-    <servlet-mapping>
-        <servlet-name>dispatcher</servlet-name>
-        <url-pattern>/</url-pattern>
-    </servlet-mapping>
+# LDE
+spring.datasource.gendartLde.jndi-name=java:/comp/env/jdbc/gendartLDE
 
-</web-app>
+# DFS
+spring.datasource.gendartDfs.jndi-name=java:/comp/env/jdbc/gendartDFS
+
+# PCDE
+spring.datasource.gendartPcde.jndi-name=java:/comp/env/jdbc/gendartPCDE
+
+# ICDP
+spring.datasource.gendartIcdp.jndi-name=java:/comp/env/jdbc/gendartICDP
+
+# CRDE
+spring.datasource.gendartCrde.jndi-name=java:/comp/env/jdbc/gendartCRDE
+
+# IFF
+spring.datasource.gendartIff.jndi-name=java:/comp/env/jdbc/gendartIFF
+
+# FRDE
+spring.datasource.gendartFrde.jndi-name=java:/comp/env/jdbc/gendartFRDE
+
+# FWDE
+spring.datasource.gendartFwde.jndi-name=java:/comp/env/jdbc/gendartFWDE
