@@ -1,113 +1,72 @@
-Here’s an expanded section on Personalized Offers Using Data Science in Banking Cards, which you can plug into your white paper or presentation:
+package com.boa.gendart.dao;
 
+import com.boa.gendart.common.DataSourceLocator;
+import com.boa.gendart.procedure.IFFetchBlobStoredProcedure;
+import com.boa.gendart.util.StaticDataLoader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.support.JdbcDaoSupport;
+import org.springframework.stereotype.Repository;
 
----
+import javax.sql.DataSource;
+import java.sql.Array;
+import java.sql.Connection;
+import java.sql.Struct;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-2.2 Personalized Offers and Customer Engagement
+@Repository
+public class IFFBlobFetchDAO extends JdbcDaoSupport {
 
-Data science enables banks to move from mass marketing to hyper-personalized financial experiences by analyzing card transaction data. With advanced analytics, banks can deliver offers that are timely, relevant, and contextually aligned with a customer's lifestyle and preferences.
+    private IFFetchBlobStoredProcedure ifFetchBlobStoredProcedure;
 
+    @Autowired
+    public void setIFFDS(@Qualifier("iffPrimaryDS") DataSource datasource) {
+        setDataSource(datasource);
+    }
 
----
+    @Override
+    protected void initDao() {
+        this.ifFetchBlobStoredProcedure = new IFFetchBlobStoredProcedure(getJdbcTemplate());
+    }
 
-A. How It Works
+    public Map findIFFBlobs(List<Map> txnKeys) throws Exception {
 
-1. Behavioral Segmentation:
+        Map sectionResultsMap = null;
 
-Clustering algorithms (e.g., K-means, DBSCAN) group users based on transaction history, merchant types, frequency, time-of-day patterns, and ticket size.
+        if (StaticDataLoader.isPrimaryDBStatus()) {
 
-Example: Group A = high spenders in travel and dining; Group B = budget-conscious grocery shoppers.
+            Map inputsMap = new HashMap();
 
+            DataSource ds = DataSourceLocator.getPrimaryDatasource("iff");
+            try (Connection con = ds.getConnection()) {
 
-2. Predictive Modeling:
+                Struct[] structs = new Struct[txnKeys.size()];
+                int i = 0;
 
-Use past transactions to predict future purchases.
+                for (Map m : txnKeys) {
+                    structs[i++] = con.createStruct(
+                            "FDS_UDP_PROCEDURES.RUN_ID_TYPE",
+                            new Object[]{
+                                    Long.parseLong(String.valueOf(m.get("PC_RULE_IN_OUT_LOG_ID")))
+                            }
+                    );
+                }
 
-Example: If a user books flight tickets every 3 months, a discount offer for a travel card or FX conversion around that time boosts engagement.
+                Array runIdArray = con.createArrayOf(
+                        "FDS_UDP_PROCEDURES.RUN_ID_TABLE",
+                        structs
+                );
 
+                inputsMap.put("P_RUN_IDS", runIdArray);
+                inputsMap.put("P_MAXROW", 50);
 
-3. Real-Time Offer Triggers:
+                sectionResultsMap = this.ifFetchBlobStoredProcedure.execute(inputsMap);
+            }
+        }
 
-Stream processing frameworks (Kafka, Flink) analyze swipe events and push merchant-specific offers within milliseconds.
-
-Example: User swipes at McDonald’s → Offer from Zomato or a cashback at Burger King sent instantly.
-
-
-4. Location and Contextual Intelligence:
-
-GPS and merchant location data enhance personalization.
-
-Example: User in Bangalore visiting malls → push nearby fashion brand deals based on past apparel spends.
-
-
-
----
-
-B. Types of Personalized Offers
-
-Offer Type	Description
-
-Spend-based cashback	“Get 10% back when you spend ₹2,000 on groceries this month”
-Merchant tie-ups	Discounts with frequent merchants like Amazon, Uber, Zomato
-Event-based offers	Birthday, festivals, anniversaries → “Flat ₹500 off on your birthday week”
-Predictive upsells	Suggest premium cards when customer consistently crosses credit limits
-Gamified offers	“Spend on 5 different categories this month and earn bonus rewards”
-
-
-
----
-
-C. Benefits to Banks
-
-Increased Card Usage: Personalized incentives encourage more frequent and higher-value transactions.
-
-Customer Retention: Relevant offers increase stickiness and reduce churn.
-
-Cross-Sell/Upsell: Easier to introduce premium cards, loans, or investment products based on spend behavior.
-
-Higher ROI on Campaigns: Targeted campaigns outperform mass emails by 3x to 5x in conversion.
-
-
-
----
-
-D. AI/ML Models in Use
-
-Use Case	Model Type
-
-Offer eligibility scoring	Logistic regression / XGBoost
-Spend forecasting	Time series (ARIMA, LSTM)
-Next-best-action prediction	Deep learning / Reinforcement learning
-Churn prediction	Decision trees, Random Forest
-
-
-
----
-
-Sample Workflow for Personalized Offers Engine:
-
-1. Data Source: Transaction DB, CRM, merchant data
-
-
-2. Feature Generation: Spend by category, time, merchant
-
-
-3. Segmentation: ML clustering
-
-
-4. Model Prediction: Next likely transaction or merchant
-
-
-5. Offer Matching: Map customer to best-fit offers
-
-
-6. Delivery: Via app, SMS, email, or in-app notification
-
-
-
-
----
-
-Would you like a visual diagram or flowchart to accompany this? I can also give you example SQL queries or Python ML code snippets for implementing such a recommendation system.
-
-Hyper-Personalized Offers Powered by Card Analytics"
+        return sectionResultsMap;
+    }
+}
