@@ -1,76 +1,20 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
-    <modelVersion>4.0.0</modelVersion>
-
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
-        <relativePath/>
-    </parent>
-
-    <groupId>com.bank.gen2</groupId>
-    <artifactId>gendart2-ui</artifactId>
-    <version>1.0.0</version>
-    <packaging>war</packaging>
-
-    <properties>
-        <java.version>1.8</java.version>
-        <mybatis.version>2.3.1</mybatis.version>
-    </properties>
-
-    <dependencies>
-
-        <!-- Web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <!-- External Tomcat -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-tomcat</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- MyBatis -->
-        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>${mybatis.version}</version>
-        </dependency>
-
-        <!-- DB2 -->
-        <dependency>
-            <groupId>com.ibm.db2</groupId>
-            <artifactId>jcc</artifactId>
-            <version>11.5.9.0</version>
-        </dependency>
-
-        <!-- JSON -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
-        <!-- Logging -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-log4j2</artifactId>
-        </dependency>
-
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
-</project>
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-war-plugin</artifactId>
+    <version>3.4.0</version>
+    <configuration>
+        <failOnMissingWebXml>false</failOnMissingWebXml>
+        <packagingExcludes>
+            WEB-INF/lib/spring-*.jar,
+            WEB-INF/lib/xerces*.jar,
+            WEB-INF/lib/xml-apis*.jar,
+            WEB-INF/lib/commons-logging*.jar,
+            WEB-INF/lib/log4j-1.*.jar,
+            WEB-INF/lib/websphere*.jar,
+            WEB-INF/lib/ojdbc6*.jar,
+            WEB-INF/lib/ojdbc7*.jar,
+            WEB-INF/lib/mybatis-spring-1*.jar,
+            WEB-INF/lib/javax*.jar
+        </packagingExcludes>
+    </configuration>
+</plugin>
