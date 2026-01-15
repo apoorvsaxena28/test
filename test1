@@ -1,85 +1,11 @@
-package com.boa.gendart.dao;
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="
+           http://xmlns.jcp.org/xml/ns/javaee
+           http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
 
-import com.boa.gendart.constants.GenDARTConstants;
-import com.boa.gendart.exception.GenDARTException;
-import com.boa.gendart.procedure.ICDPFetchBlobStoredProcedure;
-import com.boa.gendart.util.StaticDataLoader;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.support.JdbcDaoSupport;
-import org.springframework.stereotype.Repository;
+    <display-name>GenDART2UIServices</display-name>
 
-import javax.sql.DataSource;
-import java.sql.Array;
-import java.sql.Connection;
-import java.sql.Struct;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-@Repository
-public class CFTBlobFetchDAO extends JdbcDaoSupport {
-
-    private ICDPFetchBlobStoredProcedure icdpFetchBlobStoredProcedure;
-
-    @Autowired
-    public void setCFTDS(@Qualifier("cftPrimaryDS") DataSource datasource) {
-        setDataSource(datasource);
-    }
-
-    @Override
-    protected void initDao() {
-        this.icdpFetchBlobStoredProcedure = new ICDPFetchBlobStoredProcedure(getJdbcTemplate());
-    }
-
-    public Map findCFTBlobs(List<Map> txnKeys) throws Exception {
-
-        Map sectionResultsMap = null;
-
-        if (StaticDataLoader.isPrimaryDBStatus()) {
-
-            Map inputsMap = new HashMap();
-
-            try (Connection con = getDataSource().getConnection()) {
-
-                Struct[] structs = new Struct[txnKeys.size()];
-                int i = 0;
-
-                for (Map m : txnKeys) {
-                    structs[i++] = con.createStruct(
-                            "ICDP_T_RLEENGPODB.MULTIBLOB",
-                            new Object[]{
-                                    m.get("APP_REF_NO"),
-                                    m.get("RLE_ENG_CALL_SHORT_DESC_TX"),
-                                    Integer.parseInt(String.valueOf(m.get("RLE_ENG_CALL_SEQ_NO"))),
-                                    m.get("traceID")
-                            }
-                    );
-                }
-
-                Array inputArray = con.createArrayOf(
-                        "ICDP_T_RLEENGPODB.MULTIBLOB_TABLE",
-                        structs
-                );
-
-                inputsMap.put("p_rleengpodbmultiblob", inputArray);
-                inputsMap.put(GenDARTConstants.PI_BUS_OBJ_NAME, "CFTBlobFetchDAO");
-
-                sectionResultsMap = this.icdpFetchBlobStoredProcedure.execute(inputsMap);
-
-                String resultStatus = (String) sectionResultsMap.get(GenDARTConstants.PO_RESULTS);
-                if (!GenDARTConstants.OUT_ERR_MSG_VAL.equalsIgnoreCase(resultStatus)) {
-                    throw new GenDARTException(
-                            String.valueOf(sectionResultsMap.get(GenDARTConstants.PO_ERR_CODE_OUT))
-                    );
-                }
-            }
-            catch (DataAccessException e) {
-                throw e;
-            }
-        }
-
-        return sectionResultsMap;
-    }
-}
+</web-app>
